@@ -1,0 +1,18 @@
+{
+  "files.associations": {
+    "stdlib.h": "c",
+    "pico.h": "c",
+    "board.h": "c",
+    "board_api.h": "c",
+    "binary_info.h": "c",
+    "stdio.h": "c",
+    "gpio.h": "c",
+    "platform.h": "c",
+    "bitset": "c",
+    "set": "c",
+    "format": "c",
+    "__tree": "c",
+    "tusb.h": "c"
+  },
+  "C_Cpp.errorSquiggles": "disabled"
+}
