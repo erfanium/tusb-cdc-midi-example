@@ -26,21 +26,13 @@
  * THE SOFTWARE.
  */
 
-#if !defined(LIB_TINYUSB_HOST) && !defined(LIB_TINYUSB_DEVICE)
-
 #include "tusb.h"
 
 #ifndef USBD_VID
 #define USBD_VID (0x2E8A)  // Raspberry Pi
 #endif
 
-#ifndef USBD_PID
-#if PICO_RP2040
 #define USBD_PID (0x000a)  // Raspberry Pi Pico SDK CDC for RP2040
-#else
-#define USBD_PID (0x0009)  // Raspberry Pi Pico SDK CDC
-#endif
-#endif
 
 #ifndef USBD_MANUFACTURER
 #define USBD_MANUFACTURER "Raspberry Pi"
@@ -107,11 +99,6 @@ static const tusb_desc_device_t usbd_desc_device = {
     .bNumConfigurations = 1,
 };
 
-#define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx)                   \
-  /* Interface */                                                    \
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, \
-      RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx,
-
 static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
     TUD_CONFIG_DESCRIPTOR(1, USBD_ITF_MAX, USBD_STR_0, USBD_DESC_LEN,
                           USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE,
@@ -121,12 +108,9 @@ static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
                        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT, USBD_CDC_EP_IN,
                        USBD_CDC_IN_OUT_MAX_SIZE),
 
-#if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
-    TUD_RPI_RESET_DESCRIPTOR(USBD_ITF_RPI_RESET, USBD_STR_RPI_RESET)
-#endif
 };
 
-static char usbd_serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
+static char usbd_serial_str[8 * 2 + 1];
 
 static const char *const usbd_desc_str[] = {
     [USBD_STR_MANUF] = USBD_MANUFACTURER, [USBD_STR_PRODUCT] = USBD_PRODUCT,
@@ -140,19 +124,16 @@ const uint8_t *tud_descriptor_device_cb(void) {
   return (const uint8_t *)&usbd_desc_device;
 }
 
-const uint8_t *tud_descriptor_configuration_cb(__unused uint8_t index) {
+uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
+  (void)index;  // for multiple configurations
+
   return usbd_desc_cfg;
 }
 
-const uint16_t *tud_descriptor_string_cb(uint8_t index,
+#define USBD_DESC_STR_MAX 20
+
+uint16_t const *tud_descriptor_string_cb(uint8_t index,
                                          __unused uint16_t langid) {
-#ifndef USBD_DESC_STR_MAX
-#define USBD_DESC_STR_MAX (20)
-#elif USBD_DESC_STR_MAX > 127
-#error USBD_DESC_STR_MAX too high (max is 127).
-#elif USBD_DESC_STR_MAX < 17
-#error USBD_DESC_STR_MAX too low (min is 17).
-#endif
   static uint16_t desc_str[USBD_DESC_STR_MAX];
 
   // Assign the SN using the unique flash id
@@ -179,5 +160,3 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index,
 
   return desc_str;
 }
-
-#endif

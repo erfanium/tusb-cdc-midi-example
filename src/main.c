@@ -17,13 +17,13 @@ static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 int main() {
   board_init();
 
-  // tud_init(0);
+  tud_init(0);
 
   if (board_init_after_tusb) {
     board_init_after_tusb();
   }
 
-  // stdio_usb_init();
+  stdio_usb_init();
 
   while (true) {
     tud_task();
