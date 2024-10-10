@@ -44,10 +44,12 @@
 
 #define TUD_RPI_RESET_DESC_LEN 9
 #if !PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
-#define USBD_DESC_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN)
-#else
 #define USBD_DESC_LEN \
-  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
+  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN)
+#else
+#define USBD_DESC_LEN                                           \
+  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN + \
+   TUD_RPI_RESET_DESC_LEN)
 #endif
 #if !PICO_STDIO_USB_DEVICE_SELF_POWERED
 #define USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE (0)
@@ -58,13 +60,9 @@
 #define USBD_MAX_POWER_MA (1)
 #endif
 
-#define USBD_ITF_CDC (0)  // needs 2 interfaces
-#if !PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
-#define USBD_ITF_MAX (2)
-#else
-#define USBD_ITF_RPI_RESET (2)
+#define USBD_ITF_CDC (0)   // needs 2 interfaces
+#define USBD_ITF_MIDI (2)  // needs 2 interfaces
 #define USBD_ITF_MAX (3)
-#endif
 
 #define USBD_CDC_EP_CMD (0x81)
 #define USBD_CDC_EP_OUT (0x02)
@@ -72,12 +70,26 @@
 #define USBD_CDC_CMD_MAX_SIZE (8)
 #define USBD_CDC_IN_OUT_MAX_SIZE (64)
 
+#define USBD_MIDI_EP_OUT (0x03)
+#define USBD_MIDI_EP_IN (0x83)
+#define USBD_MIDI_IN_OUT_MAX_SIZE (64)
+
 #define USBD_STR_0 (0x00)
 #define USBD_STR_MANUF (0x01)
 #define USBD_STR_PRODUCT (0x02)
 #define USBD_STR_SERIAL (0x03)
 #define USBD_STR_CDC (0x04)
-#define USBD_STR_RPI_RESET (0x05)
+#define USBD_STR_MIDI (0x05)
+#define USBD_STR_RPI_RESET (0x06)
+
+#if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || \
+    CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
+// LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
+// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+#define EPNUM_MIDI 0x02
+#else
+#define EPNUM_MIDI 0x01
+#endif
 
 // Note: descriptors returned from callbacks must exist long enough for transfer
 // to complete
@@ -107,6 +119,9 @@ static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
     TUD_CDC_DESCRIPTOR(USBD_ITF_CDC, USBD_STR_CDC, USBD_CDC_EP_CMD,
                        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT, USBD_CDC_EP_IN,
                        USBD_CDC_IN_OUT_MAX_SIZE),
+
+    TUD_MIDI_DESCRIPTOR(USBD_ITF_MIDI, USBD_STR_MIDI, USBD_MIDI_EP_OUT,
+                        USBD_MIDI_EP_IN, USBD_MIDI_IN_OUT_MAX_SIZE)
 
 };
 
