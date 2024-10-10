@@ -1,31 +1,3 @@
-/*
- * This file is based on a file originally part of the
- * MicroPython project, http://micropython.org/
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- * Copyright (c) 2019 Damien P. George
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 #include "tusb.h"
 
 #ifndef USBD_VID
@@ -42,15 +14,9 @@
 #define USBD_PRODUCT "Pico"
 #endif
 
-#define TUD_RPI_RESET_DESC_LEN 9
-#if !PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
 #define USBD_DESC_LEN \
   (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN)
-#else
-#define USBD_DESC_LEN                                           \
-  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN + \
-   TUD_RPI_RESET_DESC_LEN)
-#endif
+#define TUD_RPI_RESET_DESC_LEN 9
 #if !PICO_STDIO_USB_DEVICE_SELF_POWERED
 #define USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE (0)
 #define USBD_MAX_POWER_MA (250)
@@ -62,7 +28,7 @@
 
 #define USBD_ITF_CDC (0)   // needs 2 interfaces
 #define USBD_ITF_MIDI (2)  // needs 2 interfaces
-#define USBD_ITF_MAX (3)
+#define USBD_ITF_MAX (4)
 
 #define USBD_CDC_EP_CMD (0x81)
 #define USBD_CDC_EP_OUT (0x02)
@@ -81,18 +47,6 @@
 #define USBD_STR_CDC (0x04)
 #define USBD_STR_MIDI (0x05)
 #define USBD_STR_RPI_RESET (0x06)
-
-#if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || \
-    CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
-// LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-// 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-#define EPNUM_MIDI 0x02
-#else
-#define EPNUM_MIDI 0x01
-#endif
-
-// Note: descriptors returned from callbacks must exist long enough for transfer
-// to complete
 
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
@@ -175,3 +129,19 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index,
 
   return desc_str;
 }
+
+// BOS configuration
+#define BOS_TOTAL_LEN (TUD_BOS_DESC_LEN + TUD_BOS_MICROSOFT_OS_DESC_LEN)
+
+#define MS_OS_20_DESC_LEN 166
+
+uint8_t const desc_bos[] = {
+    // total length, number of device caps
+    TUD_BOS_DESCRIPTOR(BOS_TOTAL_LEN, 1),
+
+    // Microsoft OS 2.0 descriptor
+    TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, 1)};
+
+TU_VERIFY_STATIC(sizeof(desc_bos) == BOS_TOTAL_LEN, "Incorrect size");
+
+uint8_t const *tud_descriptor_bos_cb(void) { return desc_bos; }

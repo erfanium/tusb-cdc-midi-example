@@ -27,7 +27,6 @@ int main() {
 
   while (true) {
     tud_task();
-    // stdio_put_string("Hello, Serial!", -1, true, false);
     led_blinking_task();
     midi_task();
   }
@@ -43,7 +42,7 @@ void led_blinking_task(void) {
 
   board_led_write(led_state);
   led_state = 1 - led_state;  // toggle
-  stdio_put_string("Hello, Serial!", -1, true, false);
+  printf("Hello, Serial!\n");
 }
 
 // Variable that holds the current position in the sequence.
