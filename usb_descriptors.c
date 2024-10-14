@@ -78,9 +78,10 @@ static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
         USBD_ITF_MIDI, USBD_STR_0,  // USDB_STR_MIDI is not working with Windows
         USBD_MIDI_EP_OUT, USBD_MIDI_EP_IN, USBD_MIDI_IN_OUT_MAX_SIZE),
 
-    TUD_CDC_DESCRIPTOR(
-        USBD_ITF_CDC, USBD_STR_0,  // USDB_STR_CDC is not working with Windows
-        USBD_CDC_EP_OUT, USBD_CDC_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC,
+                       USBD_STR_0,  // USDB_STR_CDC is not working with Windows
+                       USBD_CDC_EP_CMD, USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT,
+                       USBD_CDC_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
 
 };
 
